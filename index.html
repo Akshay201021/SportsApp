@@ -322,7 +322,7 @@
   // STEP 1: Paste your Google Sheets CSV URL here
   // See SETUP.md for instructions on how to get it
   // ─────────────────────────────────────────────
-  const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR17g5tlK0huIUQzpQjtBoj7pf6JqjvFLpFPFt7qhlxgJF5pTqel1GIQdtApfJL_XswFScJdVGkApUD/pub?gid=0&single=true&output=csv';
+  const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR17g5tlK0huIUQzpQjtBoj7pf6JqjvFLpFPFt7qhlxgJF5pTqel1GIQdtApfJL_XswFScJdVGkApUD/pub?output=csv';
 
   // Auto-refresh interval in seconds (30 = every 30 seconds)
   const REFRESH_INTERVAL = 10;
@@ -388,16 +388,22 @@
 
     setLoadingState(true);
     try {
-      const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + 'cachebust=' + Date.now();
+      // Route through CORS proxy — required for deployed sites fetching Google Sheets
+      const PROXY = 'https://corsproxy.io/?';
+      const url = PROXY + encodeURIComponent(SHEET_CSV_URL);
       const res = await fetch(url);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const text = await res.text();
-      GAMES = parseCSV(text);
+      // If Google returned an HTML error page instead of CSV data, catch it
+      if (text.trim().startsWith('<')) throw new Error('Got HTML instead of CSV — make sure you published the sheet as CSV (File > Share > Publish to web > select .csv)');
+      const parsed = parseCSV(text);
+      if (parsed.length === 0) throw new Error('Sheet loaded but 0 rows found — check your column headers match exactly: sport, status, period, clock, awaySchool, awayMascot, awayRecord, awayScore, homeSchool, homeMascot, homeRecord, homeScore, location, district');
+      GAMES = parsed;
       lastUpdated = new Date();
       updateTimestamp();
       hideError();
     } catch (err) {
-      showError('Could not load sheet data. Check your CSV URL and make sure the sheet is published.');
+      showError(err.message || 'Could not load sheet data.');
       console.error(err);
     }
     setLoadingState(false);
