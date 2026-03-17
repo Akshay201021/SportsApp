@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Frisco ISD Live Scores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111318;
+    --surface2: #181b22;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f2f5;
+    --muted: #6b7280;
+    --muted2: #9ca3af;
+    --live: #ef4444;
+    --live-bg: rgba(239,68,68,0.12);
+    --accent: #3b82f6;
+    --accent-bg: rgba(59,130,246,0.12);
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,0.1);
+    --amber: #f59e0b;
+    --amber-bg: rgba(245,158,11,0.1);
+    --purple: #a855f7;
+    --purple-bg: rgba(168,85,247,0.1);
+    --sport-football: #f97316;
+    --sport-football-bg: rgba(249,115,22,0.1);
+    --sport-basketball: #3b82f6;
+    --sport-basketball-bg: rgba(59,130,246,0.1);
+    --sport-baseball: #22c55e;
+    --sport-baseball-bg: rgba(34,197,94,0.1);
+    --sport-soccer: #a855f7;
+    --sport-soccer-bg: rgba(168,85,247,0.1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* grid bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 0 1.25rem 4rem; }
+
+  /* HEADER */
+  header {
+    padding: 2rem 0 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.75rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: var(--live);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 22px; height: 22px; }
+  .logo-text { display: flex; flex-direction: column; }
+  .logo-text strong {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 800; letter-spacing: 0.02em;
+    color: var(--text);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .logo-text span {
+    font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  .live-indicator {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; color: var(--live);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    background: var(--live-bg);
+    padding: 5px 10px; border-radius: 6px;
+    border: 1px solid rgba(239,68,68,0.2);
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--live);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.85)} }
+
+  .refresh-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--muted2); font-family: 'Barlow', sans-serif;
+    font-size: 13px; font-weight: 500; padding: 6px 14px; border-radius: 6px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .refresh-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+  .refresh-btn svg { width: 13px; height: 13px; }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1.5rem;
+  }
+  .stat-pill {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .stat-pill .num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 700; line-height: 1;
+  }
+  .stat-pill .lbl { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .stat-pill.live-stat .num { color: var(--live); }
+  .stat-pill.final-stat .num { color: var(--muted2); }
+  .stat-pill.upcoming-stat .num { color: var(--accent); }
+
+  /* FILTERS */
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .filter-btn {
+    padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
+    font-family: 'Barlow', sans-serif; letter-spacing: 0.03em;
+    cursor: pointer; border: 1px solid var(--border2);
+    background: transparent; color: var(--muted); transition: all 0.15s;
+    text-transform: uppercase; font-size: 11px; letter-spacing: 0.07em;
+  }
+  .filter-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .filter-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .filter-btn[data-sport="Football"].active { background: var(--sport-football); color: #fff; border-color: var(--sport-football); }
+  .filter-btn[data-sport="Basketball"].active { background: var(--sport-basketball); color: #fff; border-color: var(--sport-basketball); }
+  .filter-btn[data-sport="Baseball"].active { background: var(--sport-baseball); color: #000; border-color: var(--sport-baseball); }
+  .filter-btn[data-sport="Soccer"].active { background: var(--sport-soccer); color: #fff; border-color: var(--sport-soccer); }
+
+  /* SECTION */
+  .section-head {
+    display: flex; align-items: center; gap: 10px; margin: 1.75rem 0 0.75rem;
+  }
+  .section-head h3 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--muted);
+  }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+  .section-count {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 20px;
+  }
+
+  /* GAME CARD */
+  .game-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 8px;
+    transition: border-color 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .game-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 3px;
+    background: transparent;
+    transition: background 0.15s;
+  }
+  .game-card.is-live { border-color: rgba(239,68,68,0.25); }
+  .game-card.is-live::before { background: var(--live); }
+  .game-card:hover { border-color: var(--border2); }
+
+  .card-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 0.9rem;
+  }
+
+  .sport-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 4px;
+  }
+  .badge-Football { background: var(--sport-football-bg); color: var(--sport-football); }
+  .badge-Basketball { background: var(--sport-basketball-bg); color: var(--sport-basketball); }
+  .badge-Baseball { background: var(--sport-baseball-bg); color: var(--sport-baseball); }
+  .badge-Soccer { background: var(--sport-soccer-bg); color: var(--sport-soccer); }
+
+  .game-status { display: flex; align-items: center; gap: 6px; }
+  .status-live-txt {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 600; color: var(--live);
+    background: var(--live-bg); padding: 3px 9px; border-radius: 4px;
+  }
+  .status-final-txt {
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    background: var(--surface2); padding: 3px 9px; border-radius: 4px;
+  }
+  .status-upcoming-txt {
+    font-size: 12px; font-weight: 600; color: var(--accent);
+    background: var(--accent-bg); padding: 3px 9px; border-radius: 4px;
+  }
+
+  /* MATCHUP */
+  .matchup {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
+  }
+  .team { display: flex; flex-direction: column; }
+  .team.home { align-items: flex-end; text-align: right; }
+  .team-school {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.07em;
+  }
+  .team-mascot {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 700; color: var(--text);
+    line-height: 1.1;
+  }
+  .team-record { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .team-score-away { font-family: 'Barlow Condensed', sans-serif; font-size: 42px; font-weight: 800; line-height: 1; color: var(--muted); margin-top: 4px; }
+  .team-score-home { font-family: 'Barlow Condensed', sans-serif; font-size: 42px; font-weight: 800; line-height: 1; color: var(--muted); margin-top: 4px; }
+  .team-score-away.winning, .team-score-home.winning { color: var(--text); }
+
+  .vs-block { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .vs-sep { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; }
+  .district-tag { font-size: 11px; color: var(--muted); text-align: center; }
+
+  /* CARD FOOTER */
+  .card-footer {
+    display: flex; align-items: center; gap: 12px; margin-top: 0.9rem;
+    padding-top: 0.75rem; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--muted);
+  }
+  .card-footer span { display: flex; align-items: center; gap: 5px; }
+  .card-footer svg { width: 12px; height: 12px; opacity: 0.6; }
+
+  /* UPCOMING TIME */
+  .upcoming-time {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px; font-weight: 700; color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+
+  .empty { text-align: center; padding: 3rem; color: var(--muted); font-size: 14px; }
+
+  /* FOOTER */
+  footer {
+    text-align: center; padding: 2rem 0; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--muted); margin-top: 2rem;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 560px) {
+    .team-mascot { font-size: 14px; }
+    .team-score-away, .team-score-home { font-size: 32px; }
+    header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+      </div>
+      <div class="logo-text">
+        <strong>Frisco ISD Scores</strong>
+        <span>Live &amp; scheduled games</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-indicator"><div class="dot"></div> Live</div>
+      <span id="last-updated" style="font-size:12px;color:var(--muted);"></span>
+      <button class="refresh-btn" onclick="refreshData()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13.5 2.5A6.5 6.5 0 0 0 2 8"/><path d="M2.5 13.5A6.5 6.5 0 0 0 14 8"/><path d="M1 5.5L2 8l2.5-1"/><path d="M15 10.5L14 8l-2.5 1"/></svg>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-sport="all" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" data-sport="Football" onclick="setFilter('Football',this)">Football</button>
+    <button class="filter-btn" data-sport="Basketball" onclick="setFilter('Basketball',this)">Basketball</button>
+    <button class="filter-btn" data-sport="Baseball" onclick="setFilter('Baseball',this)">Baseball</button>
+    <button class="filter-btn" data-sport="Soccer" onclick="setFilter('Soccer',this)">Soccer</button>
+  </div>
+
+  <div id="app"></div>
+
+  <footer>
+    Frisco ISD Scores &mdash; Live data via Google Sheets. For official scores visit <a href="https://www.uiltexas.org" target="_blank">UIL Texas</a> or <a href="https://www.maxpreps.com" target="_blank">MaxPreps</a>.
+  </footer>
+</div>
+
+<script>
+  // ─────────────────────────────────────────────
+  // STEP 1: Paste your Google Sheets CSV URL here
+  // See SETUP.md for instructions on how to get it
+  // ─────────────────────────────────────────────
+  const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR17g5tlK0huIUQzpQjtBoj7pf6JqjvFLpFPFt7qhlxgJF5pTqel1GIQdtApfJL_XswFScJdVGkApUD/pub?gid=0&single=true&output=csv';
+
+  // Auto-refresh interval in seconds (30 = every 30 seconds)
+  const REFRESH_INTERVAL = 10;
+
+  // ─────────────────────────────────────────────
+  // App state
+  // ─────────────────────────────────────────────
+  let GAMES = [];
+  let activeFilter = 'all';
+  let lastUpdated = null;
+  let refreshTimer = null;
+  let countdown = REFRESH_INTERVAL;
+
+  // ─────────────────────────────────────────────
+  // CSV parser
+  // ─────────────────────────────────────────────
+  function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    return lines.slice(1).map(line => {
+      // handle commas inside quotes
+      const cols = [];
+      let cur = '', inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        if (line[i] === '"') { inQ = !inQ; continue; }
+        if (line[i] === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+        cur += line[i];
+      }
+      cols.push(cur.trim());
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = cols[i] !== undefined ? cols[i] : '');
+      return obj;
+    }).filter(row => row.sport && row.awaySchool && row.homeSchool).map((row, i) => ({
+      id: i + 1,
+      sport: row.sport,
+      status: (row.status || 'upcoming').toLowerCase(),
+      period: row.period || '',
+      clock: row.clock || '',
+      awaySchool: row.awaySchool,
+      awayMascot: row.awayMascot || '',
+      awayRecord: row.awayRecord || '',
+      awayScore: row.awayScore !== '' && row.awayScore !== undefined ? parseInt(row.awayScore) : null,
+      homeSchool: row.homeSchool,
+      homeMascot: row.homeMascot || '',
+      homeRecord: row.homeRecord || '',
+      homeScore: row.homeScore !== '' && row.homeScore !== undefined ? parseInt(row.homeScore) : null,
+      location: row.location || '',
+      district: row.district || '',
+    }));
+  }
+
+  // ─────────────────────────────────────────────
+  // Data fetching
+  // ─────────────────────────────────────────────
+  async function fetchData() {
+    if (!SHEET_CSV_URL || SHEET_CSV_URL === 'YOUR_GOOGLE_SHEET_CSV_URL_HERE') {
+      showSetupBanner();
+      GAMES = getSampleData();
+      render();
+      return;
+    }
+
+    setLoadingState(true);
+    try {
+      const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + 'cachebust=' + Date.now();
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      GAMES = parseCSV(text);
+      lastUpdated = new Date();
+      updateTimestamp();
+      hideError();
+    } catch (err) {
+      showError('Could not load sheet data. Check your CSV URL and make sure the sheet is published.');
+      console.error(err);
+    }
+    setLoadingState(false);
+    render();
+  }
+
+  function setLoadingState(loading) {
+    const btn = document.querySelector('.refresh-btn');
+    if (loading) {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    } else {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+
+  function updateTimestamp() {
+    if (!lastUpdated) return;
+    const t = lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('last-updated').textContent = 'Updated ' + t;
+  }
+
+  function showError(msg) {
+    let el = document.getElementById('error-banner');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'error-banner';
+      el.style.cssText = 'background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#ef4444;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;';
+      document.getElementById('app').before(el);
+    }
+    el.textContent = '⚠ ' + msg;
+  }
+
+  function hideError() {
+    const el = document.getElementById('error-banner');
+    if (el) el.remove();
+  }
+
+  function showSetupBanner() {
+    let el = document.getElementById('setup-banner');
+    if (el) return;
+    el = document.createElement('div');
+    el.id = 'setup-banner';
+    el.style.cssText = 'background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);color:#93c5fd;padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:1rem;line-height:1.6;';
+    el.innerHTML = '<strong style="color:#3b82f6;">Setup needed:</strong> Open <code style="background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:4px;">index.html</code> and replace <code style="background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:4px;">YOUR_GOOGLE_SHEET_CSV_URL_HERE</code> with your published Google Sheet CSV URL. See <strong>SETUP.md</strong> for step-by-step instructions. Showing sample data for now.';
+    document.getElementById('app').before(el);
+  }
+
+  // ─────────────────────────────────────────────
+  // Auto-refresh countdown
+  // ─────────────────────────────────────────────
+  function startCountdown() {
+    clearInterval(refreshTimer);
+    countdown = REFRESH_INTERVAL;
+    refreshTimer = setInterval(() => {
+      countdown--;
+      const el = document.getElementById('countdown');
+      if (el) el.textContent = countdown + 's';
+      if (countdown <= 0) {
+        fetchData();
+        countdown = REFRESH_INTERVAL;
+      }
+    }, 1000);
+  }
+
+  async function refreshData() {
+    await fetchData();
+    startCountdown();
+  }
+
+  // ─────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────
+  function setFilter(sport, btn) {
+    activeFilter = sport;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  function statusHTML(g) {
+    if (g.status === 'live') return `<div class="status-live-txt"><div class="dot"></div>${g.period}${g.period && g.clock ? ' &bull; ' : ''}${g.clock}</div>`;
+    if (g.status === 'final') return `<div class="status-final-txt">Final</div>`;
+    return `<div class="status-upcoming-txt">${g.clock || 'TBD'}</div>`;
+  }
+
+  function gameCard(g) {
+    const homeWin = g.homeScore > g.awayScore;
+    const awayWin = g.awayScore > g.homeScore;
+    const scoreBlock = `<div class="vs-block"><div class="vs-sep">${g.status === 'upcoming' ? 'VS' : '—'}</div><div class="district-tag">${g.district}</div></div>`;
+    const awayScoreHTML = g.status === 'upcoming' ? '' : `<div class="team-score-away ${awayWin ? 'winning' : ''}">${g.awayScore}</div>`;
+    const homeScoreHTML = g.status === 'upcoming'
+      ? `<div class="upcoming-time">${g.clock || 'TBD'}</div>`
+      : `<div class="team-score-home ${homeWin ? 'winning' : ''}">${g.homeScore}</div>`;
+
+    return `<div class="game-card ${g.status === 'live' ? 'is-live' : ''}">
+      <div class="card-top">
+        <span class="sport-badge badge-${g.sport}">${g.sport}</span>
+        <div class="game-status">${statusHTML(g)}</div>
+      </div>
+      <div class="matchup">
+        <div class="team away">
+          <div class="team-school">${g.awaySchool}</div>
+          <div class="team-mascot">${g.awayMascot}</div>
+          <div class="team-record">${g.awayRecord}</div>
+          ${awayScoreHTML}
+        </div>
+        ${scoreBlock}
+        <div class="team home">
+          <div class="team-school">${g.homeSchool}</div>
+          <div class="team-mascot">${g.homeMascot}</div>
+          <div class="team-record">${g.homeRecord}</div>
+          ${homeScoreHTML}
+        </div>
+      </div>
+      <div class="card-footer">
+        <span>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 1.5C5.5 1.5 3.5 3.5 3.5 6c0 3.5 4.5 8.5 4.5 8.5S12.5 9.5 12.5 6c0-2.5-2-4.5-4.5-4.5Z" stroke-linecap="round"/><circle cx="8" cy="6" r="1.5"/></svg>
+          ${g.location}
+        </span>
+        <span>${g.district}</span>
+      </div>
+    </div>`;
+  }
+
+  function render() {
+    const filtered = activeFilter === 'all' ? GAMES : GAMES.filter(g => g.sport === activeFilter);
+    const live = filtered.filter(g => g.status === 'live');
+    const upcoming = filtered.filter(g => g.status === 'upcoming');
+    const final = filtered.filter(g => g.status === 'final');
+
+    const allLive = GAMES.filter(g => g.status === 'live').length;
+    const allUpcoming = GAMES.filter(g => g.status === 'upcoming').length;
+    const allFinal = GAMES.filter(g => g.status === 'final').length;
+
+    document.getElementById('stats-bar').innerHTML = `
+      <div class="stat-pill live-stat"><div class="num">${allLive}</div><div class="lbl">Live now</div></div>
+      <div class="stat-pill upcoming-stat"><div class="num">${allUpcoming}</div><div class="lbl">Upcoming</div></div>
+      <div class="stat-pill final-stat"><div class="num">${allFinal}</div><div class="lbl">Final</div></div>
+      <div class="stat-pill" style="margin-left:auto;"><div class="lbl" style="font-size:11px;">Auto-refresh in <span id="countdown">${countdown}s</span></div></div>
+    `;
+
+    let html = '';
+    if (live.length) html += `<div class="section-head"><h3>Live now</h3><div class="section-count">${live.length}</div><div class="section-line"></div></div>` + live.map(gameCard).join('');
+    if (upcoming.length) html += `<div class="section-head"><h3>Upcoming today</h3><div class="section-count">${upcoming.length}</div><div class="section-line"></div></div>` + upcoming.map(gameCard).join('');
+    if (final.length) html += `<div class="section-head"><h3>Final</h3><div class="section-count">${final.length}</div><div class="section-line"></div></div>` + final.map(gameCard).join('');
+    if (!filtered.length) html = `<div class="empty">No games found.</div>`;
+
+    document.getElementById('app').innerHTML = html;
+  }
+
+  // ─────────────────────────────────────────────
+  // Sample data shown before sheet is connected
+  // ─────────────────────────────────────────────
+  function getSampleData() {
+    return [
+      { id:1, sport:'Football', status:'live', period:'Q3', clock:'4:12', awaySchool:'Frisco HS', awayMascot:'Raccoons', awayRecord:'6-2', awayScore:14, homeSchool:'Liberty HS', homeMascot:'Eagles', homeRecord:'5-3', homeScore:21, location:'Toyota Stadium', district:'District 5-6A' },
+      { id:2, sport:'Basketball', status:'live', period:'2nd Half', clock:'12:45', awaySchool:'Independence HS', awayMascot:'Knights', awayRecord:'7-5', awayScore:44, homeSchool:'Centennial HS', homeMascot:'Titans', homeRecord:'8-4', homeScore:48, location:'CHS Gymnasium', district:'District 9-5A' },
+      { id:3, sport:'Football', status:'upcoming', clock:'7:00 PM', awaySchool:'Lone Star HS', awayMascot:'Rangers', awayRecord:'6-2', awayScore:null, homeSchool:'Independence HS', homeMascot:'Knights', homeRecord:'7-1', homeScore:null, location:'Toyota Stadium', district:'District 5-6A' },
+      { id:4, sport:'Baseball', status:'final', period:'', clock:'', awaySchool:'Memorial HS', awayMascot:'Warriors', awayRecord:'9-7', awayScore:3, homeSchool:'Reedy HS', homeMascot:'Lions', homeRecord:'11-5', homeScore:7, location:'Reedy HS Field', district:'District 9-5A' },
+    ];
+  }
+
+  // ─────────────────────────────────────────────
+  // Boot
+  // ─────────────────────────────────────────────
+  fetchData();
+  startCountdown();
+</script>
+</body>
+</html>
